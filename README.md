@@ -36,7 +36,7 @@
 ## 快速开始
 
 ```bash
-git clone https://github.com/<your-name>/qq-bot-llm.git
+git clone https://github.com/cpu888cpu/qq-bot-llm.git
 cd qq-bot-llm
 
 pip install -r requirements.txt
