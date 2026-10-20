@@ -1,0 +1,13 @@
+{
+  "app_id": "你的 AppID",
+  "app_secret": "你的 AppSecret",
+  "intents": 33554432,
+  "api_base": "https://api.deepseek.com",
+  "api_key": "",
+  "model": "deepseek-chat",
+  "temperature": 0.8,
+  "max_tokens": 800,
+  "max_history": 6,
+  "llm_timeout": 90,
+  "system_prompt": "你是一个住在 QQ 里的 AI 助手，说话简短自然，像正常聊天，不要长篇大论，不要写动作旁白。不知道答案就直说，不要编造。"
+}

@@ -1,0 +1,11 @@
+# 配置文件里有 AppSecret 和 API Key，绝对不要提交
+config.json
+
+# 运行时日志
+*.log
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+.venv/
+venv/
