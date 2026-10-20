@@ -147,6 +147,46 @@ QQ 机器人的消息通道是 WebSocket，流程不复杂：
 
 ---
 
+## 疑难排查
+
+### 回复很慢，一次要十几秒
+
+先看日志的时间戳，把延迟拆成两段：`C2C <-` 到模型返回是一段，模型返回到 `send ... -> 200` 是另一段。如果两段都是 5 秒以上，问题基本不在模型，而在 DNS。
+
+在手机上跑 proot Ubuntu 时会踩到这个坑：`/etc/resolv.conf` 里第一个 nameserver 是 `8.8.8.8`，而国内网络对 UDP 53 基本不放行，每次域名解析都要先等它超时 5 秒，才轮到后面的服务器。
+
+用 curl 看一下 DNS 耗时：
+
+```bash
+curl -s -o /dev/null -w 'dns=%{time_namelookup} tls=%{time_appconnect} total=%{time_total}\n' https://api.deepseek.com
+```
+
+`dns` 超过 1 秒就是它。修复方式是把 `/etc/resolv.conf` 换成国内 DNS：
+
+```
+nameserver 223.5.5.5
+nameserver 223.6.6.6
+nameserver 119.29.29.29
+```
+
+改完再测，DNS 应该降到几十毫秒，整条链路会从十几秒压到两三秒。注意 proot 环境重建时这个文件会被重置，出问题先查它。
+
+### 发了消息，机器人没反应
+
+按顺序查三件事：
+
+1. QQ 开放平台管理端有没有勾选事件订阅，至少要有 `C2C_MESSAGE_CREATE`，群聊要 `GROUP_AT_MESSAGE_CREATE`。
+2. 日志里有没有 `C2C <-` 开头的行。没有就是事件没进来，回到第 1 条。
+3. 群聊里必须 @ 机器人，C2C 需要先添加机器人好友。
+
+### 回复是「链路通了但没配 Key」
+
+`config.json` 里的 `api_key` 还是空的。填上 DeepSeek 的 Key，重启进程即可。
+
+### 日志里出现 401
+
+access_token 过期。程序会清掉缓存自动重取一次。如果持续 401，说明 AppSecret 已被重置或填错。
+
 ## 已知限制
 
 - **被动回复有时限**。带 `msg_id` 的回复必须在收到消息后的一段时间内发出，超时会失败。所以模型响应不能太慢，`llm_timeout` 别设太大。
